@@ -1,17 +1,18 @@
 const inquirer = require('inquirer');
-
+const generatePage = require('./src/page-template');
+const { writeFile, copyFile } = require('./utils/generate-site');
 
 const promptUser = () => {
     return inquirer.prompt([
         {
             type: 'input',
             name: 'name',
-            message: 'What is your name?',
+            message: 'What is your name? (Required)',
             validate: nameInput => {
                 if (nameInput) {
                     return true;
                 } else {
-                    console.log('Please enter your name.');
+                    console.log('Please enter your name!');
                     return false;
                 }
             }
@@ -19,12 +20,12 @@ const promptUser = () => {
         {
             type: 'input',
             name: 'github',
-            message: 'Enter you github Username.',
+            message: 'Enter your GitHub Username (Required)',
             validate: githubInput => {
                 if (githubInput) {
                     return true;
                 } else {
-                    console.log('Please enter your name.');
+                    console.log('Please enter your GitHub username!');
                     return false;
                 }
             }
@@ -38,25 +39,19 @@ const promptUser = () => {
         {
             type: 'input',
             name: 'about',
-            message: 'Provide some information about yourself?',
-            when: ({ confrimAbout }) => {
-                if (confirmAbout) {
-                    return true;
-                } else {
-                    return false
-                }
-            }
-        },
-    ])
-        .then(answers => console.log(answers));
+            message: 'Provide some information about yourself:',
+            when: ({ confirmAbout }) => confirmAbout
+        }
+    ]);
 };
 
 const promptProject = portfolioData => {
     console.log(`
-  =================
-  Add a New Project
-  =================
-  `);
+=================
+Add a New Project
+=================
+`);
+
     // If there's no 'projects' array property, create one
     if (!portfolioData.projects) {
         portfolioData.projects = [];
@@ -132,19 +127,20 @@ const promptProject = portfolioData => {
 };
 
 promptUser()
-    .then(answers => console.log(answers))
     .then(promptProject)
-    .then(projectAnswers => console.log(projectAnswers))
-
-
-// const fs = require('fs');
-// const generatePage = require('./src/page-template');
-
-// const pageHTML = generatePage(name, github);
-
-// fs.writeFile('./index.html', pageHTML, err => {
-//   if (err) throw err;
-
-//   console.log('Portfolio complete! Check out index.html to see the output!');
-// });
-
+    .then(portfolioData => {
+        return generatePage(portfolioData);
+    })
+    .then(pageHTML => {
+        return writeFile(pageHTML);
+    })
+    .then(writeFileResponse => {
+        console.log(writeFileResponse);
+        return copyFile();
+    })
+    .then(copyFileResponse => {
+        console.log(copyFileResponse);
+    })
+    .catch(err => {
+        console.log(err);
+    });
